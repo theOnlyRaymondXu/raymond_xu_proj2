@@ -1,0 +1,301 @@
+<!doctype html>
+<html>
+<head>
+	<style>
+    figure.container {
+      display:inline-block;
+    }
+  </style>
+</head>
+<h2>Overview</h2>
+The goal of this project was to implement image blurring using a Gaussian Kernel, image straightening by counting horizontal/vertical edges, image sharpening, hybrid images, gaussian/laplacian stacks, and multiresolution blending. 
+
+<h2>Part 1: Fun With Filters</h2>
+<h3>Part 1.1: Finite Difference Operator</h3>
+The partial derivative in x and y were taken of the cameraman image by convolving the image with the finite difference operators.
+<div>
+	<figure class = "container">
+		<img  src="cameraman_dx.png" >
+		<figcaption>partial derivative in x</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="cameraman_dy.png" >
+		<figcaption>partial derivative in y</figcaption>
+	</figure>
+</div>
+The next step was to compute the gradient magnitude image, which is done by taking the square root of the sum of the squares of the derivatives in x and y. Then, the gradient magnitude image was converted into an edge image by binarizing the pixel values, giving values less than a threshold of .14 to 0, and 1 otherwise. 
+<div>
+	<figure class = "container">
+		<img  src="cameraman.jpg" style="width:60%; height:60%">
+		<figcaption>original cameraman image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="gradient_magnitude.jpg" style="width:60%; height:60%">
+		<figcaption>gradient magnitude image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="camerman_edge.jpg" style="width:60%; height:60%">
+		<figcaption>edge image</figcaption>
+	</figure>
+</div>
+<h3>Part 1.2: Derivative of Gaussian (DoG) Filter</h3>
+It is apparent that there is a lot of noise in the edge image produced. This is fixed by applying a gaussian blur by convolving a gaussian kernel with the edge image. The convolution from the previous part can be convolved with the gaussian kernel to create a single convolution that produces a better edge image. The white dots/noise created from the grass in part 1.1 is now removed. 
+<div>
+	<figure class = "container">
+		<img  src="cameraman_gauss_edge.jpg" style="width:60%; height:60%">
+		<figcaption>edge image with gaussian blur</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="cameraman_gauss_dx.png">
+		<figcaption>partial derivative in x</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="cameraman_gauss_dy.png">
+		<figcaption>partial derivative in y</figcaption>
+	</figure>
+</div>
+<h3>Part 1.3: Image Straightening</h3>
+In order to automate the image straightening process, I first rotate the image by a certain degree in a predetermined range [-20, 20). Before doing anything, I blur the image with a gaussian kernel in order to have a smoother image and have a more uniform gradient angle. Since a rotation creates unneeded empty space in the image, I cropped out the outer fifths of the image and only used the center when calculating the gradient angles using the formula arctan2(dy, dx). dy and dx were the partial derivatives of the image, calculated similarly to part 1.1. I then count the number of gradient angles that are within +/- 2 degrees from 90 and 180 degrees for each rotation, and take the maximum count in order to maximize the number of horizontal and vertical edges. 
+<div>
+	<figure class = "container">
+		<img  src="facade.jpg" style="width:20%; height:20%">
+		<figcaption>original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="facade_rotated.jpg" style="width:20%; height:20%">
+		<figcaption>image rotated by -4 degrees</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="facade_hist.png">
+		<figcaption>histogram of gradient angles of original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="facade_rotated_hist.png">
+		<figcaption>histogram of gradient angles of rotated image</figcaption>
+	</figure>
+</div>
+
+<div>
+	<figure class = "container">
+		<img  src="night_tilted.jpg" style="width:50%; height:50%">
+		<figcaption>original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="night_rotated.jpg" style="width:50%; height:50%">
+		<figcaption>image rotated by 16 degrees</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="night_hist.png">
+		<figcaption>histogram of gradient angles of original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="night_rotated_hist.png">
+		<figcaption>histogram of gradient angles of rotated image</figcaption>
+	</figure>
+</div>
+
+<div>
+	<figure class = "container">
+		<img  src="wine_tilted.jpg" style="width:50%; height:50%">
+		<figcaption>original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="wine_rotated.jpg" style="width:50%; height:50%">
+		<figcaption>image rotated by -10 degrees</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="wine_hist.png">
+		<figcaption>histogram of gradient angles of original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="wine_rotated_histt.png">
+		<figcaption>histogram of gradient angles of rotated image</figcaption>
+	</figure>
+</div>
+
+<div>
+	This picture probably failed because there were multiple perspectives of straight, from the ground to the kid to the buildings behind. It also likely that the rotation range is out of the one I provided. 
+	<figure class = "container">
+		<img  src="skate_tilted.jpg" style="width:20%; height:20%">
+		<figcaption>original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="skate_rotated.jpg" style="width:20%; height:20%">
+		<figcaption>image rotated by 18 degrees</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="skate_hist.png">
+		<figcaption>histogram of gradient angles of original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="skate_rotated_hist.png">
+		<figcaption>histogram of gradient angles of rotated image</figcaption>
+	</figure>
+</div>
+
+Overall, there still seems to be zero spikes in the histograms, despite using arctan2. I have noticed that it is more common and pronounced in images with lower resolution. This might be because the gaussian blurs blur it too much and reduce the derivatives. 
+
+<h2>Part 2.1: Image "Sharpening"</h2>
+
+In order to "sharpen" an image, we can take the high frequencies of the original image, computed by subtracting its gaussian blur from itself, and it to itself. Enhancing the high frequencies gives the illusion of a sharper image. All of these steps can be combined into a single convolution operation, with the convolution matrix being (1+alpha) * unit_impulse - alpha * gaussian_kernel. I chose alpha to be 1. 
+
+<div>
+	<figure class = "container">
+		<img  src="taj.jpg" style="width:90%; height:90%">
+		<figcaption>original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="taj_sharpened.jpg" style="width:40%; height:40%">
+		<figcaption>sharpened image with guassian kernel of size 10 sigma 2</figcaption>
+	</figure>
+</div>
+
+<div>
+	<figure class = "container">
+		<img  src="whitehouse.jpg" style="width:40%; height:40%">
+		<figcaption>original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="whitehouse_sharpened.jpg" style="width:40%; height:40%">
+		<figcaption>sharpened image with guassian kernel of size 10 sigma 2</figcaption>
+	</figure>
+</div>
+
+<div>
+	<figure class = "container">
+		<img  src="jfk.jpg" style="width:60%; height:60%">
+		<figcaption>original image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="jfk_blurred.jpg" style="width:60%; height:60%">
+		<figcaption>blurred image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="jfk_blurred_sharpened.jpg" style="width:60%; height:60%">
+		<figcaption>sharpened blurred image with guassian kernel of size 10 sigma 2</figcaption>
+	</figure>
+</div>
+After the JFK image was blurred, attempting to sharpen the image did not produce a result that was close to the original. This is likely because the original blurring removed many of the high frequencies, which would reduce the effectiveness of the image "sharpening" process.
+
+<h2>Part 2.2: Hybrid Images</h2>
+To combine two images together, I take the low frequencies of one image and combine it with only the high frequencies of the other. This results in an image that more closely resembles the high frequency image when looked at closely, and more closely resembles the other when seen from a distance. The low frequencies are obtained through a gaussian blur, and the high frequency by subtracting the low frequencies from the original image.  
+<h4>Derk and a cat</h4>
+<div class="container">
+	<figure class = "container">
+		<img  src="DerekPicture.jpg" style="width:30%; height:30%">
+		<figcaption>input image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="nutmeg.jpg" style="width:20%; height:20%">
+		<figcaption>input image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="cat_hybrid.jpg" style="width:30%; height:30%">
+		<figcaption>hybrid image</figcaption>
+	</figure>
+</div>
+<h4>Trump and a monkey</h4>
+<div class="container">
+	<figure class = "container">
+		<img  src="monkey.jpg" style="width:40%; height:40%">
+		<figcaption>input image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="trump.jpg" style="width:50%; height:50%">
+		<figcaption>input image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="trump_hybrid.jpg" style="width:50%; height:50%">
+		<figcaption>hybrid image</figcaption>
+	</figure>
+</div>
+
+<h4>A burning and non burning Notre Dame</h4>
+<div class="container">
+	<figure class = "container">
+		<img  src="notredame_fire2.jpg" style="width:20%; height:20%">
+		<figcaption>input image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="notredame.jpg" style="width:70%; height:70%">
+		<figcaption>input image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="notredame_hybrid.jpg" style="width:70%; height:70%">
+		<figcaption>hybrid image</figcaption>
+	</figure>
+</div>
+
+<h4>A dead and healthy sunflower</h4>
+<div class="container">
+	<figure class = "container">
+		<img  src="dead_sunflower.jpg" style="width:50%; height:50%">
+		<figcaption>input image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="alive_sunflower.jpg" style="width:20%; height:20%">
+		<figcaption>input image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="sunflower_hybrid.jpg" style="width:50%; height:50%">
+		<figcaption>hybrid image</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="sunflower_fft.png" >
+		<figcaption>FFT of, from left to right: input 1, input2, filtered 1, filtered 2, hybrid</figcaption>
+	</figure>
+</div>
+
+<h3>Bells and Whistles</h3>
+After implementing both grayscale and color hybrid images, I discovered that the quality depended on the input pictures, but it was generally beneficial for the lower frequency to be in color and the high frequency to be in grayscale. 
+
+
+<h2>Part 2.3: Gaussian and Laplacian Stacks</h2>
+I did not subsample the images on each level because these are Guassian and Laplacian stacks, not pyramids. The process is fairly simple, reusing the gaussian kernel methods from previous parts for the Guassian stack. The Laplacian stack is obtained at each level by subtracting the newly blurred image from the blurred image from the previous level. 
+
+<h4>Salvador Dali painting of Lincoln and Gala</h4>
+<div class="container">
+	<figure class = "container">
+		<img  src="lincoln_gaussian.png" >
+		<figcaption>gaussian stack</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="lincoln_laplacian.png">
+		<figcaption>laplacian stack</figcaption>
+	</figure>
+</div>
+<h4>Suflower (from part 2)</h4>
+<div class="container">
+	<figure class = "container">
+		<img  src="sunflower_gaussian.png" >
+		<figcaption>gaussian stack</figcaption>
+	</figure>
+	<figure class = "container">
+		<img src="sunflower_laplacian.png">
+		<figcaption>laplacian stack</figcaption>
+	</figure>
+</div>
+
+<h2>Part 2.4: Multiresolution Blending (a.k.a. the oraple!)</h2>
+To blend two images together, an image spline is used to smoothly blend the edges(multiresolution blending). A mask is used to outline the edges for blending. To obtain the blended image, we use the gaussian and laplacian stacks of each input image, using the formula LS_i = R[i]*LA[i] + (1-R[i])*LB[i] to calculate the image at each level. Finally, all the levels are summed together. 
+<div class="container">
+	<h4>Apple plus Orange</h4>
+	<figure class = "container">
+		<img  src="apple_orange.png" >
+	</figure>
+	<h4>Headphones and Spotify</h4>
+	<figure class = "container">
+		<img src="headphones_spotify.png">
+	</figure>
+	<h4>Headphones and Spotify</h4>
+	<figure class = "container">
+		<img src="fox_mask.png">
+	</figure>
+	<figure class = "container">
+		<img src="fox_mask_laplacian.png">
+	</figure>
+	<figcaption>masked images that helped create the blended image</figcaption>
+</div>
+
+<h2>Takeaways</h2>
+Overall, this was a very rewarding project! I didn't know gaussian kernels were so useful, as they were pretty much essential for almost every part of this project! I also found it very interesting that low and frequencies could used to create so many cool things, from hybrid images to sharpening images! 
